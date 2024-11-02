@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node serve.js",
+    "dev": "nodemon serve.js"
   },
   "keywords": [],
   "author": "",
@@ -18,5 +20,9 @@
     "mongoose": "^8.8.0",
     "multer": "^1.4.5-lts.1",
     "tesseract.js": "^5.1.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7",
+    "prettier": "^3.3.3"
   }
 }
