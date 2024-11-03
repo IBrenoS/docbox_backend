@@ -2,17 +2,46 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require("../models/userModel");
 const { jwtSecret } = require("../config/auth");
+const { logAction } = require("../utils/logger");
+const loginAttempts = {};
 
 const login = async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
-  if (!user) return res.status(400).json({ message: "Usuário não encontrado" });
+
+  if (!user) {
+    logAction(
+      null,
+      "failed-login",
+      `Tentativa de login falhou para email: ${email}`
+    );
+    return res.status(400).json({ message: "Usuário não encontrado" });
+  }
+
+  if (!loginAttempts[email])
+    loginAttempts[email] = { attempts: 0, lastAttempt: new Date() };
 
   const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-  if (!isPasswordValid)
+  if (!isPasswordValid) {
+    loginAttempts[email].attempts += 1;
+    if (loginAttempts[email].attempts >= 3) {
+      logAction(
+        user._id,
+        "security-alert",
+        `Múltiplas tentativas de login falhadas para ${email}`
+      );
+      return res
+        .status(403)
+        .json({ message: "Conta temporariamente bloqueada" });
+    }
     return res.status(401).json({ message: "Senha incorreta" });
+  }
+
+  // Reset de tentativas em caso de sucesso
+  loginAttempts[email] = { attempts: 0, lastAttempt: new Date() };
 
   const token = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: "1h" });
+  logAction(user._id, "login", `Usuário ${email} logou com sucesso`);
   res.json({ token });
 };
 

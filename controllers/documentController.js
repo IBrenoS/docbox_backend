@@ -1,6 +1,7 @@
 const s3 = require("../config/cloudStorage");
 const { processImage } = require("../services/ocrService");
 const Document = require("../models/documentModel");
+const { logAction } = require("../utils/logger");
 
 const uploadDocument = async (req, res) => {
   const { userId, documentType } = req.body;
@@ -25,13 +26,18 @@ const uploadDocument = async (req, res) => {
     dataExtracted: { text: extractedText },
   });
   await newDocument.save();
+  
+  // Log do upload de documento
+  logAction(
+    userId,
+    "upload-document",
+    `Documento ${documentFile.originalname} carregado`
+  );
 
-  res
-    .status(201)
-    .json({
-      message: "Documento carregado e processado com sucesso",
-      document: newDocument,
-    });
+  res.status(201).json({
+    message: "Documento carregado e processado com sucesso",
+    document: newDocument,
+  });
 };
 
 module.exports = { uploadDocument };
