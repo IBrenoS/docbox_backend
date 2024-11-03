@@ -1,9 +1,46 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require("../models/userModel");
+const RevokedToken = require("../models/revokedToken");
 const { jwtSecret } = require("../config/auth");
 const { logAction } = require("../utils/logger");
 const loginAttempts = {};
+
+const register = async (req, res) => {
+  try {
+    const { name, email, password, pin } = req.body;
+
+    // Verificar se o usuário já existe
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "E-mail já cadastrado." });
+    }
+
+    // Hash da senha e do PIN
+    const passwordHash = await bcrypt.hash(password, 10);
+    const pinHash = await bcrypt.hash(pin, 10);
+
+    // Criar novo usuário
+    const newUser = new User({
+      name,
+      email,
+      passwordHash,
+      pin: pinHash,
+      biometricEnabled: false,
+    });
+
+    // Salvar usuário no banco de dados
+    await newUser.save();
+
+    // Gerar token JWT para o novo usuário
+    const token = jwt.sign({ id: newUser._id }, jwtSecret, { expiresIn: "1h" });
+
+    res.status(201).json({ message: "Usuário cadastrado com sucesso", token });
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao cadastrar usuário", error });
+  }
+};
+
 
 const login = async (req, res) => {
   const { email, password } = req.body;
@@ -78,13 +115,25 @@ const setSessionTimeout = async (req, res) => {
 };
 
 
-const revokeToken = (req, res) => {
+const revokeToken = async (req, res) => {
+  const token = req.headers["authorization"]?.split(" ")[1];
+  if (!token) return res.status(400).json({ message: "Token não fornecido" });
 
-    res.status(200).json({ message: 'Token revogado e logout realizado com sucesso' });
+  const decoded = jwt.decode(token);
+  const expiresAt = decoded?.exp
+    ? new Date(decoded.exp * 1000)
+    : new Date(Date.now() + 3600 * 1000);
+
+  await RevokedToken.create({ token, expiresAt });
+
+  res
+    .status(200)
+    .json({ message: "Token revogado e logout realizado com sucesso" });
 };
 
 
 module.exports = {
+  register,
   login,
   verifyPin,
   setupBiometrics,

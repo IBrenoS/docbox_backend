@@ -3,7 +3,6 @@ const mongoose = require("./config/database");
 const authRoutes = require("./routes/authRoutes");
 const documentRoutes = require("./routes/documentRoutes");
 const logRoutes = require("./routes/logRoutes");
-const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
@@ -11,11 +10,9 @@ const app = express();
 app.use(express.json());
 
 // Configuração das rotas
-app.use("/api/auth", authRoutes);
-app.use("/api/documents", documentRoutes);
-app.use("/api/logs", logRoutes);
+app.use("/auth", authRoutes);
+app.use("/documents", documentRoutes);
+app.use("/logs", logRoutes);
 
-// Middleware de tratamento de erros
-app.use(errorHandler);
 
 module.exports = app;

@@ -2,6 +2,8 @@ const s3 = require("../config/cloudStorage");
 const { processImage } = require("../services/ocrService");
 const Document = require("../models/documentModel");
 const { PutObjectCommand } = require("@aws-sdk/client-s3");
+require("dotenv").config();
+
 
 const uploadDocument = async (req, res) => {
   const { userId, documentType } = req.body;
@@ -17,7 +19,7 @@ const uploadDocument = async (req, res) => {
   try {
     // Executando o comando de upload com PutObjectCommand
     const command = new PutObjectCommand(uploadParams);
-    const uploadResult = await s3.send(command);
+    await s3.send(command);
 
     // Construindo a URL do arquivo (a v3 não retorna Location diretamente)
     const fileUrl = `https://${uploadParams.Bucket}.s3.${process.env.CLOUD_STORAGE_REGION}.amazonaws.com/${uploadParams.Key}`;
