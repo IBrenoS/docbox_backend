@@ -16,11 +16,4 @@ userSchema.methods.comparePassword = function (password) {
   return bcrypt.compareSync(password, this.passwordHash);
 };
 
-// Hash de senha antes de salvar
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("passwordHash")) return next();
-  this.passwordHash = await bcrypt.hash(this.passwordHash, 10);
-  next();
-});
-
 module.exports = mongoose.model("User", userSchema);

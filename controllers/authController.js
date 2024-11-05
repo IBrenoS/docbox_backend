@@ -126,6 +126,8 @@ const revokeToken = async (req, res) => {
 
   await RevokedToken.create({ token, expiresAt });
 
+  logAction(decoded?.id, "token-revoked", `Token revogado para o usuário ${decoded?.id}`);
+
   res
     .status(200)
     .json({ message: "Token revogado e logout realizado com sucesso" });
