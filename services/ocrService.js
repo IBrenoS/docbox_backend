@@ -1,8 +1,15 @@
 const Tesseract = require("tesseract.js");
 
-const processImage = async (imagePath) => {
-  return Tesseract.recognize(imagePath, "por")
-    .then(({ data: { text } }) => text);
-};
+async function processOCR(imageBuffer) {
+  try {
+    const {
+      data: { text },
+    } = await Tesseract.recognize(imageBuffer, "por");
+    return text;
+  } catch (error) {
+    console.error("Erro no OCR:", error);
+    throw new Error("Erro ao processar OCR");
+  }
+}
 
-module.exports = { processImage };
+module.exports = { processOCR };
