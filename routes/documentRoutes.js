@@ -100,5 +100,21 @@ router.get("/full/:id", authMiddleware, pinMiddleware, async (req, res) => {
   }
 });
 
+// Rota para listar logs de auditoria de um documento
+router.get('/logs/:documentId', authMiddleware, async (req, res) => {
+  try {
+    const { documentId } = req.params;
+    const logs = await AuditLog.find({ documentId }).sort({ timestamp: -1 });
+
+    if (logs.length === 0) return res.status(404).json({ error: "Nenhum log encontrado para este documento" });
+
+    res.json(logs);
+  } catch (error) {
+    console.error("Erro ao buscar logs de auditoria:", error);
+    res.status(500).json({ error: "Erro ao buscar logs de auditoria" });
+  }
+});
+
+
 
 module.exports = router;
