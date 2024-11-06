@@ -16,35 +16,64 @@ router.post(
     try {
       const userId = req.user.id;
       const { originalname } = req.file;
+      const { category } = req.body; // Recebe a categoria do corpo da requisição
 
-      // Executar OCR
+      // Validação da categoria
+      if (!["RG", "CPF", "CNH"].includes(category)) {
+        return res
+          .status(400)
+          .json({
+            error: "Categoria inválida. Use uma das categorias: RG, CPF, CNH",
+          });
+      }
+
+      // Executar OCR e salvar no S3
       const ocrData = await processOCR(req.file.buffer);
-
-      // Fazer upload manualmente ao S3 com SDK v3
       const s3Upload = await uploadToS3(req.file);
 
-      // Salvar metadados do documento no MongoDB
+      // Salvar documento com categoria
       const newDocument = new Document({
         userId,
         originalName: originalname,
         s3Key: s3Upload.key,
+        category,
         ocrData,
       });
 
       await newDocument.save();
-
       res
         .status(201)
         .json({
-          message: "Documento enviado e processado com sucesso!",
+          message: "Documento enviado com sucesso!",
           document: newDocument,
         });
     } catch (error) {
-      console.error("Erro no upload do documento:", error);
+      console.error("Erro ao fazer upload do documento:", error);
       res.status(500).json({ error: "Erro ao fazer upload do documento" });
     }
   }
 );
+
+router.get("/category/:category", authMiddleware, async (req, res) => {
+  try {
+    const { category } = req.params;
+    const userId = req.user.id;
+
+    if (!["RG", "CPF", "CNH"].includes(category)) {
+      return res
+        .status(400)
+        .json({
+          error: "Categoria inválida. Use uma das categorias: RG, CPF, CNH",
+        });
+    }
+
+    const documents = await Document.find({ userId, category });
+    res.json(documents);
+  } catch (error) {
+    console.error("Erro ao buscar documentos por categoria:", error);
+    res.status(500).json({ error: "Erro ao buscar documentos por categoria" });
+  }
+});
 
 router.get("/preview/:id", authMiddleware, async (req, res) => {
   try {
@@ -115,6 +144,30 @@ router.get('/logs/:documentId', authMiddleware, async (req, res) => {
   }
 });
 
+// Rota para excluir um documento
+router.delete("/:id", authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Verificar se o documento pertence ao usuário
+    const document = await Document.findById(id);
+    if (!document)
+      return res.status(404).json({ error: "Documento não encontrado" });
+    if (document.userId.toString() !== userId) {
+      return res.status(403).json({ error: "Acesso não autorizado" });
+    }
+
+    // Excluir do S3 e do MongoDB
+    await deleteFromS3(document.s3Key);
+    await Document.findByIdAndDelete(id);
+
+    res.json({ message: "Documento excluído com sucesso" });
+  } catch (error) {
+    console.error("Erro ao excluir documento:", error);
+    res.status(500).json({ error: "Erro ao excluir documento" });
+  }
+});
 
 
 module.exports = router;
