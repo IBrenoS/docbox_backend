@@ -6,10 +6,13 @@ const router = express.Router();
 
 // Rota de Registro
 router.post("/register", async (req, res) => {
-  const { cpf, email, password, nome, sobrenome } = req.body;
+  const { cpf, email, password, confirmPassword, nome, sobrenome } = req.body;
+  if (password !== confirmPassword) {
+    return res.status(400).json({ error: "As senhas não coincidem" });
+  }
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ cpf, password: hashedPassword, email, nome, sobrenome }); sobrenome
+    const newUser = new User({ cpf, password: hashedPassword, email, nome, sobrenome });
     await newUser.save();
     res.status(201).json({ message: "Usuário registrado com sucesso!" });
   } catch (error) {
