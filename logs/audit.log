@@ -1,0 +1,7 @@
+2024-11-03T20:19:42.967Z | User: null | Action: failed-login | Details: Tentativa de login falhou para email: Breno0@example.com
+2024-11-03T20:20:03.115Z | User: 6727dae6f1f411033ad70919 | Action: login | Details: Usuário Breno0@example.com logou com sucesso
+2024-11-03T20:20:40.055Z | User: 6727dae6f1f411033ad70919 | Action: login | Details: Usuário Breno0@example.com logou com sucesso
+2024-11-03T20:25:56.430Z | User: null | Action: failed-login | Details: Tentativa de login falhou para email: undefined
+2024-11-03T20:26:04.083Z | User: 6727dae6f1f411033ad70919 | Action: login | Details: Usuário Breno0@example.com logou com sucesso
+2024-11-03T20:30:23.427Z | User: 6727dae6f1f411033ad70919 | Action: login | Details: Usuário Breno0@example.com logou com sucesso
+2024-11-03T20:30:51.198Z | User: 6727dae6f1f411033ad70919 | Action: token-revoked | Details: Token revogado para o usuário 6727dae6f1f411033ad70919
