@@ -16,7 +16,7 @@ mongoose
   .catch((error) => console.error("Erro ao conectar ao MongoDB:", error));
 
 
-// Rotas principaisf
+// Rotas principais
 app.use('/auth', authRoutes);
 app.use("/documents", documentRoutes);
 
